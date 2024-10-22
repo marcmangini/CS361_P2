@@ -81,6 +81,7 @@ public class NFAState extends State {
      * 
      * @return name
      */
+    @Override
     public String getName() {
         return name; 
     }

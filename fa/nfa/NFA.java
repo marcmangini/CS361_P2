@@ -3,8 +3,6 @@ package fa.nfa;
 import java.util.HashSet;
 import java.util.Set;
 
-import fa.State;
-
 public class NFA implements NFAInterface{
     private Set<NFAState> states;
     private Set<Character> sigma;
@@ -41,7 +39,7 @@ public class NFA implements NFAInterface{
         for (NFAState state : states) {
             for (Character symbol : sigma) {
                 Set<NFAState> transitions = state.getTransition(symbol);
-                if (transitions.size() > 1 || state.getEpsilonTransitions().size() > 0) {
+                if (transitions.size() > 1 || !state.getEpsilonTransitions().isEmpty()) {
                     return false; 
                 }
             }
@@ -70,8 +68,13 @@ public class NFA implements NFAInterface{
 
     @Override
     public boolean setStart(String name) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setStart'");
+        for (NFAState state : states) {
+            if (state.getName().equals(name)) {
+                state.setStartState(true); 
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -102,14 +105,22 @@ public class NFA implements NFAInterface{
 
     @Override
     public boolean isFinal(String name) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isFinal'");
+        for (NFAState state : states) {
+            if (state.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public boolean isStart(String name) {
-        NFAState state = getState(name);
-        return state != null && state.isStart;
+        for (NFAState state : states) {
+            if (state.isStartState() && state.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
     
 }
