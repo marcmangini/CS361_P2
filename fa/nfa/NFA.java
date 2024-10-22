@@ -108,7 +108,7 @@ public class NFA implements NFAInterface{
 
     @Override
     public boolean isStart(String name) {
-        NFAState state = (NFAState) getState(name);
+        NFAState state = getState(name);
         return state != null && state.isStart;
     }
     
