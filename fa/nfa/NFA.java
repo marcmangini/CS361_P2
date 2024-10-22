@@ -21,7 +21,26 @@ public class NFA implements NFAInterface{
 
     @Override
     public Set<NFAState> eClosure(NFAState s) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Set<NFAState> eClosureStates = new HashSet<>();
+        Set<NFAState> stack = new HashSet<>();
+        
+        eClosureStates.add(s);
+        stack.add(s);
+
+        while (!stack.isEmpty()) {
+            NFAState currentState = stack.iterator().next(); 
+            stack.remove(currentState); 
+
+            // Checks for epsilon transitions
+            for (NFAState nextState : currentState.getEpsilonTransitions()) {
+                if (!eClosureStates.contains(nextState)) {
+                    eClosureStates.add(nextState); 
+                    stack.add(nextState); 
+                }
+            }
+        }
+
+        return eClosureStates; 
     }
 
     @Override
