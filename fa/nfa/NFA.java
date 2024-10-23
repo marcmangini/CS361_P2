@@ -7,6 +7,7 @@ public class NFA implements NFAInterface{
     private Set<NFAState> states;
     private Set<Character> sigma;
     private Set<NFAState> finalStates;
+    private NFAState startState;
 
     public NFA() {
         states = new HashSet<>();
@@ -89,12 +90,14 @@ public class NFA implements NFAInterface{
     public boolean setStart(String name) {
         for (NFAState state : states) {
             if (state.getName().equals(name)) {
-                state.setStartState(true); 
+                state.setStartState(true);
+                startState = state; 
                 return true;
             }
         }
         return false;
     }
+
 
     @Override
     public void addSigma(char symbol) {
@@ -103,9 +106,38 @@ public class NFA implements NFAInterface{
 
     @Override
     public boolean accepts(String s) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'accepts'");
+        if (startState == null) {
+            return false;
+        }
+    
+        Set<NFAState> currentStates = eClosure(startState);
+    
+        for (char symbol : s.toCharArray()) {
+            Set<NFAState> nextStates = new HashSet<>();
+            for (NFAState state : currentStates) {
+                Set<NFAState> transitions = getToState(state, symbol);
+                if (transitions != null) {
+                    nextStates.addAll(transitions);
+                }
+            }
+    
+            // Applies epsilon closure to the next states
+            currentStates = new HashSet<>();
+            for (NFAState state : nextStates) {
+                currentStates.addAll(eClosure(state)); 
+            }
+        }
+    
+        // Checks if any of the current states are final states
+        for (NFAState state : currentStates) {
+            if (finalStates.contains(state)) {
+                return true;
+            }
+        }
+    
+        return false;
     }
+    
 
     @Override
     public Set<Character> getSigma() {
