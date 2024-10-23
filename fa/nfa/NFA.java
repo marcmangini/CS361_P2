@@ -2,6 +2,7 @@ package fa.nfa;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Stack;
 
 public class NFA implements NFAInterface{
     private Set<NFAState> states;
@@ -23,25 +24,28 @@ public class NFA implements NFAInterface{
     @Override
     public Set<NFAState> eClosure(NFAState s) {
         Set<NFAState> eClosureStates = new HashSet<>();
-        Set<NFAState> stack = new HashSet<>();
-        
-        eClosureStates.add(s);
-        stack.add(s);
+        Stack<NFAState> stack = new Stack<>();
+
+        eClosureStates.add(s); 
+        stack.push(s); 
+
+        for (NFAState state : states) {
+            state.visited = false;
+        }
 
         while (!stack.isEmpty()) {
-            NFAState currentState = stack.iterator().next(); 
-            stack.remove(currentState); 
-
-            // Checks for epsilon transitions
-            for (NFAState nextState : currentState.getEpsilonTransitions()) {
-                if (!eClosureStates.contains(nextState)) {
-                    eClosureStates.add(nextState); 
-                    stack.add(nextState); 
+            NFAState currentState = stack.pop();
+            if (!currentState.visited) {
+                Set<NFAState> epsilonTransitions = currentState.getTransition('e');
+                if (epsilonTransitions != null) {
+                    eClosureStates.addAll(epsilonTransitions);
+                    stack.addAll(epsilonTransitions);
                 }
+                currentState.visited = true;
             }
         }
 
-        return eClosureStates; 
+        return eClosureStates;
     }
 
     @Override

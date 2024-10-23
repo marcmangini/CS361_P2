@@ -14,6 +14,7 @@ public class NFAState extends State {
     protected Set<NFAState> epsilonTransitions;
     protected  boolean isStart;
     protected String name;
+    protected boolean visited;
 
     /**
      * Constructs an NFAState with the given name.
@@ -25,6 +26,7 @@ public class NFAState extends State {
         this.isStart = false; 
         this.epsilonTransitions = new HashSet<>();
         this.transitions = new HashMap<>();
+        this.visited = false;
     }
 
     /**
@@ -101,5 +103,22 @@ public class NFAState extends State {
      */
     public void addEpsilonTransition(NFAState toState) {
         epsilonTransitions.add(toState);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        NFAState otherState = (NFAState) obj;
+        return Objects.equals(name, otherState.name); 
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name); 
     }
 }
