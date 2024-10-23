@@ -46,12 +46,65 @@ public class NFA implements NFAInterface{
 
     @Override
     public int maxCopies(String s) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int maxCopies = 0;
+
+        Set<NFAState> currentStates = new HashSet<>();
+        Set<NFAState> nextStates = new HashSet<>();
+    
+        if (startState == null) {
+            return -1;  
+        }
+    
+        currentStates.add(startState);
+        currentStates.addAll(eClosure(startState));
+    
+        maxCopies = Math.max(maxCopies, currentStates.size());
+    
+        for (char symbol : s.toCharArray()) {
+            for (NFAState state : currentStates) {
+                Set<NFAState> transitions = state.getTransition(symbol);
+                if (transitions != null) {
+                    nextStates.addAll(transitions);
+                }
+            }
+    
+            Set<NFAState> closureStates = new HashSet<>();
+            for (NFAState state : nextStates) {
+                closureStates.addAll(eClosure(state));
+            }
+    
+            currentStates.clear();
+            currentStates.addAll(closureStates);
+            maxCopies = Math.max(maxCopies, currentStates.size());
+    
+            nextStates.clear();
+        }
+        return maxCopies;
     }
 
     @Override
     public boolean addTransition(String fromState, Set<String> toStates, char onSymb) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        NFAState from = getState(fromState);
+        
+        // CheckS if the from exists
+        if (from == null) {
+            return false; 
+        }
+
+        // Checks if the symbol is part of the alphabet
+        if (!sigma.contains(onSymb) && onSymb != 'e') {
+            return false; 
+        }
+
+        for (String toStateName : toStates) {
+            NFAState to = getState(toStateName);
+            if (to == null) {
+                return false; 
+            }
+            from.setTransition(onSymb, to);
+        }
+        addSigma(onSymb); 
+        return true;
     }
 
     @Override
