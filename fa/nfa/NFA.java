@@ -109,16 +109,37 @@ public class NFA implements NFAInterface{
 
     @Override
     public boolean isDFA() {
+        if (states == null || sigma == null) {
+            return false; 
+        }
+    
         for (NFAState state : states) {
+            // Checks for null state
+            if (state == null) {
+                continue; 
+            }
+    
+            // Verifies each symbol in the alphabet
             for (Character symbol : sigma) {
                 Set<NFAState> transitions = state.getTransition(symbol);
-                if (transitions.size() > 1 || !state.getEpsilonTransitions().isEmpty()) {
+                
+                // If theres multiple transitions its not a DFA
+                if (transitions != null && transitions.size() > 1) {
                     return false; 
                 }
             }
+    
+            // Checks for epsilon transitions
+            if (state.getTransition('e') != null) {
+                return false; 
+            }
         }
-        return true;
+    
+        return true; 
     }
+    
+    
+
 
     @Override
     public boolean addState(String name) {
