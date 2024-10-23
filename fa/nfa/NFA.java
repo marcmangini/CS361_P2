@@ -18,7 +18,7 @@ public class NFA implements NFAInterface{
 
     @Override
     public Set<NFAState> getToState(NFAState from, char onSymb) {
-        return from.getTransition(onSymb);
+        return from.toStates(onSymb);
     }
 
     @Override
@@ -36,7 +36,7 @@ public class NFA implements NFAInterface{
         while (!stack.isEmpty()) {
             NFAState currentState = stack.pop();
             if (!currentState.visited) {
-                Set<NFAState> epsilonTransitions = currentState.getTransition('e');
+                Set<NFAState> epsilonTransitions = currentState.toStates('e');
                 if (epsilonTransitions != null) {
                     eClosureStates.addAll(epsilonTransitions);
                     stack.addAll(epsilonTransitions);
@@ -66,7 +66,7 @@ public class NFA implements NFAInterface{
     
         for (char symbol : s.toCharArray()) {
             for (NFAState state : currentStates) {
-                Set<NFAState> transitions = state.getTransition(symbol);
+                Set<NFAState> transitions = state.toStates(symbol);
                 if (transitions != null) {
                     nextStates.addAll(transitions);
                 }
@@ -125,7 +125,7 @@ public class NFA implements NFAInterface{
     
             // Verifies each symbol in the alphabet
             for (Character symbol : sigma) {
-                Set<NFAState> transitions = state.getTransition(symbol);
+                Set<NFAState> transitions = state.toStates(symbol);
                 
                 // If theres multiple transitions its not a DFA
                 if (transitions != null && transitions.size() > 1) {
@@ -134,7 +134,7 @@ public class NFA implements NFAInterface{
             }
     
             // Checks for epsilon transitions
-            if (state.getTransition('e') != null) {
+            if (state.toStates('e') != null) {
                 return false; 
             }
         }
@@ -234,7 +234,7 @@ public class NFA implements NFAInterface{
 
     @Override
     public boolean isFinal(String name) {
-        for (NFAState state : states) {
+        for (NFAState state : finalStates) {
             if (state.getName().equals(name)) {
                 return true;
             }

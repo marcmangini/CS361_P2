@@ -53,7 +53,7 @@ public class NFAState extends State {
      * @return A set of states that can be transitioned to on the input symbol.
      *         If no transition exists for the symbol, returns an empty set.
      */
-    public Set<NFAState> getTransition(Character symbol) {
+    public Set<NFAState> toStates(Character symbol) {
         if (transitions.get(symbol) != null) {
             return transitions.get(symbol);
         }
