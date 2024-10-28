@@ -1,4 +1,4 @@
-# Project #: Nondeterministic Finite Automata
+# Project 2: Nondeterministic Finite Automata
 
 * Author: Aarik Guy, Marc Mangini
 * Class: CS354 Section #001
