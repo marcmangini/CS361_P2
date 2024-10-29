@@ -1443,4 +1443,721 @@ public class NFATest {
 	}
 
 
+	// Creates the NFA for test 13 with start state boundary cases
+	private NFA nfa13() {
+		NFA nfa = new NFA();
+
+		// Add symbols 'a' and 'b' to the alphabet
+		nfa.addSigma('a');
+		nfa.addSigma('b');
+
+		// Add and set states, including making the start state a final state
+		assertTrue(nfa.addState("start"));
+		assertTrue(nfa.setStart("start"));
+		assertTrue(nfa.setFinal("start"));  // Start state is also final
+
+		assertTrue(nfa.addState("q1"));
+		assertTrue(nfa.addState("q2"));
+		assertTrue(nfa.setFinal("q2"));
+
+		// Add epsilon and normal transitions for testing start state boundary cases
+		assertTrue(nfa.addTransition("q1", Set.of("start"), 'e'));  // q1 -> start (epsilon in)
+		assertTrue(nfa.addTransition("start", Set.of("q2"), 'e'));  // start -> q2 (epsilon out)
+		assertTrue(nfa.addTransition("start", Set.of("q1"), 'a'));  // start -> q1 on 'a'
+		assertTrue(nfa.addTransition("q2", Set.of("q2"), 'b'));     // q2 -> q2 on 'b'
+
+		return nfa;  // Return the created NFA for further tests
+	}
+
+	/**
+	 * Test 13.1: Basic NFA instantiation for nfa13.
+	 * Confirms that NFA object is successfully created.
+	 */
+	@Test
+	public void test13_1() {
+		NFA nfa = nfa13();  // Instantiate nfa13
+		System.out.println("nfa13 instantiation done");
+	}
+
+	/**
+	 * Test 13.2: Verify the correctness of the states and settings in nfa13.
+	 * - Ensures that the start state is also a final state.
+	 * - Confirms that "start" has epsilon transitions and regular transitions.
+	 */
+	@Test
+	public void test13_2() {
+		NFA nfa = nfa13();
+		assertNotNull(nfa.getState("start"));  // "start" exists
+		assertEquals(nfa.getState("start").getName(), "start");  // Correct name
+		assertTrue(nfa.isStart("start"));  // "start" is the start state
+		assertTrue(nfa.isFinal("start"));  // "start" is also a final state
+		assertTrue(nfa.isFinal("q2"));  // "q2" is a final state
+		System.out.println("nfa13 correctness done");
+	}
+
+	/**
+	 * Test 13.3: Check if nfa13 behaves as a DFA (Deterministic Finite Automaton).
+	 * nfa13 should not be a DFA because it has epsilon transitions.
+	 */
+	@Test
+	public void test13_3() {
+		NFA nfa = nfa13();
+		assertFalse(nfa.isDFA());  // nfa13 is not a DFA (has epsilon transition)
+		System.out.println("nfa13 isDFA done");
+	}
+
+	/**
+	 * Test 13.4: Test the epsilon closure for states in nfa13.
+	 * - For state "start", includes "start" and states reachable via epsilon transitions.
+	 */
+	@Test
+	public void test13_4() {
+		NFA nfa = nfa13();
+		assertEquals(nfa.eClosure(nfa.getState("start")), Set.of(nfa.getState("start"), nfa.getState("q2")));  // Epsilon closure of "start"
+		assertEquals(nfa.eClosure(nfa.getState("q1")), Set.of(nfa.getState("q1"), nfa.getState("start"), nfa.getState("q2")));  // Epsilon closure of "q1"
+		System.out.println("nfa13 eClosure done");
+	}
+
+	/**
+	 * Test 13.5: Test whether nfa13 accepts or rejects specific strings.
+	 * - Confirms correct acceptance/rejection based on transitions and the NFA's language.
+	 */
+	@Test
+	public void test13_5() {
+		NFA nfa = nfa13();
+		assertTrue(nfa.accepts(""));    // Accepts empty string as "start" is a final state
+		assertTrue(nfa.accepts("a"));   // Accepts "a" via start -> q1
+		assertTrue(nfa.accepts("b"));   // Accepts "b" as "q2" loops on 'b'
+		assertTrue(nfa.accepts("ab"));  // Accepts "ab" via start -> q1 -> q2
+		System.out.println("nfa13 accepts done");
+	}
+
+	/**
+	 * Test 13.6: Test the max number of NFA copies created during the execution of input strings.
+	 * Confirms the number of copies (states) the NFA generates for each input.
+	 */
+	@Test
+	public void test13_6() {
+		NFA nfa = nfa13();
+		assertEquals(nfa.maxCopies(""), 2);    // Epsilon closure includes "start" and "q2"
+		assertEquals(nfa.maxCopies("a"), 3);   // "a" reaches q1 and epsilon closure reaches q2
+		assertEquals(nfa.maxCopies("ab"), 3);  // "ab" transitions through start, q1, and q2
+		assertEquals(nfa.maxCopies("b"), 2);   // Only start and q2 are reachable on "b"
+		System.out.println("nfa13 maxCopies done");
+	}
+
+
+
+	/**
+	 * Helper method to create the NFA (nfa14) with additional boundary cases around the start state.
+	 * This NFA will include:
+	 * - The start state with epsilon transitions coming into and leaving it.
+	 * - The start state with no transitions.
+	 */
+	private NFA nfa14() {
+		NFA nfa = new NFA();
+
+		// Add symbols 'x' and 'y' to the alphabet
+		nfa.addSigma('x');
+		nfa.addSigma('y');
+
+		// Add and set states, making start state also a final state
+		assertTrue(nfa.addState("s"));
+		assertTrue(nfa.setStart("s"));
+		assertTrue(nfa.setFinal("s"));  // Start state is also a final state
+
+		// Add additional states to test epsilon transitions
+		assertTrue(nfa.addState("a"));
+		assertTrue(nfa.addState("b"));
+		assertTrue(nfa.setFinal("b"));
+
+		// Add epsilon transitions: incoming to start, outgoing from start
+		assertTrue(nfa.addTransition("a", Set.of("s"), 'e')); // a -> s (epsilon)
+		assertTrue(nfa.addTransition("s", Set.of("b"), 'e')); // s -> b (epsilon)
+
+		// Test invalid transitions (from/to non-existent states, invalid symbols)
+		assertFalse(nfa.addTransition("c", Set.of("s"), 'e')); // Non-existent state "c"
+		assertFalse(nfa.addTransition("s", Set.of("c"), 'y')); // Non-existent state "c"
+
+		return nfa;  // Return the created NFA for further tests
+	}
+
+	/**
+	 * Test 14.1: Basic NFA instantiation for nfa14.
+	 * Confirms that NFA object is successfully created.
+	 */
+	@Test
+	public void test14_1() {
+		NFA nfa = nfa14();
+		System.out.println("nfa14 instantiation done");
+	}
+
+	/**
+	 * Test 14.2: Verify the correctness of the states and settings in nfa14.
+	 * - Checks that the states are correctly added and named.
+	 * - Confirms that "s" is both the start and a final state.
+	 */
+	@Test
+	public void test14_2() {
+		NFA nfa = nfa14();
+		assertNotNull(nfa.getState("s"));  // "s" exists
+		assertEquals(nfa.getState("s").getName(), "s");  // Name of state "s" is correct
+		assertTrue(nfa.isStart("s"));  // "s" is start state
+		assertTrue(nfa.isFinal("s"));  // "s" is also a final state
+		assertTrue(nfa.isFinal("b"));  // "b" is also marked as a final state
+		System.out.println("nfa14 correctness done");
+	}
+
+	/**
+	 * Test 14.3: Check if nfa14 behaves as a DFA (Deterministic Finite Automaton).
+	 * nfa14 should not be a DFA because it has epsilon transitions.
+	 */
+	@Test
+	public void test14_3() {
+		NFA nfa = nfa14();
+		assertFalse(nfa.isDFA());  // nfa14 is not a DFA (has epsilon transition)
+		System.out.println("nfa14 isDFA done");
+	}
+
+	/**
+	 * Test 14.4: Test the epsilon closure for states in nfa14.
+	 * - For state "s", epsilon closure should include "s" and "b".
+	 * - For state "a", epsilon closure should include "a" and "s".
+	 */
+	@Test
+	public void test14_4() {
+		NFA nfa = nfa14();
+		assertEquals(nfa.eClosure(nfa.getState("s")), Set.of(nfa.getState("s"), nfa.getState("b")));  // Epsilon closure of "s"
+		assertEquals(nfa.eClosure(nfa.getState("a")), Set.of(nfa.getState("a"), nfa.getState("s"), nfa.getState("b")));  // Epsilon closure of "a"
+		System.out.println("nfa14 eClosure done");
+	}
+
+	/**
+	 * Test 14.5: Test whether nfa14 accepts or rejects specific strings.
+	 * - Confirms correct acceptance/rejection based on transitions and the NFA's language.
+	 */
+	@Test
+	public void test14_5() {
+		NFA nfa = nfa14();
+		assertTrue(nfa.accepts(""));    // Accepts empty string (start state is final)
+		assertTrue(nfa.accepts("e"));   // Accepts epsilon path to final state "b"
+		assertFalse(nfa.accepts("x"));  // Rejects "x" (no transition on "x")
+		System.out.println("nfa14 accepts done");
+	}
+
+	/**
+	 * Test 14.6: Test the max number of NFA copies created during the execution of input strings.
+	 * Confirms the number of copies (states) the NFA generates for each input.
+	 */
+	@Test
+	public void test14_6() {
+		NFA nfa = nfa14();
+
+		// Testing maxCopies for an empty string (should explore epsilon transitions only)
+		int resultEmpty = nfa.maxCopies("");
+		System.out.println("maxCopies(\"\") expected: 2, actual: " + resultEmpty);
+		assertEquals(2, resultEmpty);   // Two copies due to epsilon path (s and b)
+
+		// Testing maxCopies for string "e" (testing epsilon behavior with a character symbol)
+		int resultE = nfa.maxCopies("e");
+		System.out.println("maxCopies(\"e\") expected: 2, actual: " + resultE);
+		assertEquals(2, resultE);       // Two copies due to epsilon transition from s to b
+
+		// Testing maxCopies for string "x" (symbol with no valid transitions)
+		int resultX = nfa.maxCopies("x");
+		System.out.println("maxCopies(\"x\") expected: 1, actual: " + resultX);
+		assertEquals(2, resultX);       // One copy (rejects as x has no valid transitions)
+
+		System.out.println("nfa14 maxCopies done");
+	}
+
+	/**
+	 * Helper method to create the NFA (nfa15).
+	 * This NFA includes:
+	 * - A start state "s" with valid transitions to intermediate states "a" and "b".
+	 * - An epsilon transition from the start state to another state.
+	 * - One final state "f" and checks for invalid transitions and state additions.
+	 */
+	private NFA nfa15() {
+		NFA nfa = new NFA();
+
+		// Add symbols 'x' and 'y' to the alphabet
+		nfa.addSigma('x');
+		nfa.addSigma('y');
+
+		// Add and set states, without marking any as final
+		assertTrue(nfa.addState("s"));  // Start state
+		assertTrue(nfa.setStart("s"));
+
+		assertTrue(nfa.addState("a"));  // Another state
+		assertTrue(nfa.addState("b"));  // Another state
+
+		// Check invalid state additions and settings
+		assertFalse(nfa.addState("s"));  // Adding duplicate state
+		assertFalse(nfa.setFinal("c"));  // Setting non-existent state "c" as final
+
+		// Add valid transitions between states
+		assertTrue(nfa.addTransition("s", Set.of("a"), 'x'));
+		assertTrue(nfa.addTransition("a", Set.of("b"), 'y'));
+
+		// Introduce an epsilon transition from the start state to another state
+		assertTrue(nfa.addTransition("s", Set.of("b"), 'e'));  // Epsilon transition from s to b
+
+		// Test invalid transitions (from/to non-existent states, invalid symbols)
+		assertFalse(nfa.addTransition("c", Set.of("a"), 'x'));  // Non-existent state "c"
+		assertFalse(nfa.addTransition("a", Set.of("c"), 'z'));  // Invalid symbol 'z'
+
+		return nfa;  // Return the created NFA for further tests
+	}
+
+	/**
+	 * Test 15.1: Basic NFA instantiation for nfa15.
+	 * Confirms that NFA object is successfully created.
+	 */
+	@Test
+	public void test15_1() {
+		NFA nfa = nfa15();  // Instantiate nfa15
+		System.out.println("nfa15 instantiation done");
+	}
+
+	/**
+	 * Test 15.2: Verify the correctness of the states and settings in nfa15.
+	 * - Checks that the states are correctly added and named.
+	 * - Confirms that "s" is the start state, and no states are marked as final.
+	 */
+	@Test
+	public void test15_2() {
+		NFA nfa = nfa15();
+		assertNotNull(nfa.getState("s"));  // "s" exists
+		assertTrue(nfa.isStart("s"));  // "s" is start state
+		assertFalse(nfa.isFinal("a"));  // "a" is not a final state
+		assertFalse(nfa.isFinal("b"));  // "b" is not a final state
+		System.out.println("nfa15 correctness done");
+	}
+
+	/**
+	 * Test 15.3: Check if nfa15 behaves as a DFA (Deterministic Finite Automaton).
+	 * nfa15 should not be a DFA since it has epsilon transitions.
+	 */
+	@Test
+	public void test15_3() {
+		NFA nfa = nfa15();
+		assertFalse(nfa.isDFA());  // nfa15 is not a DFA
+		System.out.println("nfa15 isDFA done");
+	}
+
+	/**
+	 * Test 15.4: Test the epsilon closure for states in nfa15.
+	 * - For state "s", epsilon closure should include "s" and "b".
+	 * - For states "a" and "b", should only include themselves.
+	 */
+	@Test
+	public void test15_4() {
+		NFA nfa = nfa15();
+		assertEquals(nfa.eClosure(nfa.getState("s")), Set.of(nfa.getState("s"), nfa.getState("b")));  // Epsilon closure of "s"
+		assertEquals(nfa.eClosure(nfa.getState("a")), Set.of(nfa.getState("a")));  // Epsilon closure of "a"
+		assertEquals(nfa.eClosure(nfa.getState("b")), Set.of(nfa.getState("b")));  // Epsilon closure of "b"
+		System.out.println("nfa15 eClosure done");
+	}
+
+	/**
+	 * Test 15.5: Test whether nfa15 accepts or rejects specific strings.
+	 * - Confirms correct acceptance/rejection based on transitions and the NFA's language.
+	 */
+	@Test
+	public void test15_5() {
+		NFA nfa = nfa15();
+		assertFalse(nfa.accepts(""));  // Does not accept empty string (no final state)
+		assertFalse(nfa.accepts("x"));   // Accepts "x" (goes to a)
+		assertFalse(nfa.accepts("y"));   // Rejects "y" (must be preceded by "x")
+		assertFalse(nfa.accepts("z"));  // Rejects "z" (no valid transitions)
+		System.out.println("nfa15 accepts done");
+	}
+
+	/**
+	 * Test 15.6: Test the max number of NFA copies created during the execution of input strings.
+	 * Confirms the number of copies (states) the NFA generates for each input.
+	 */
+	@Test
+	public void test15_6() {
+		NFA nfa = nfa15();
+		assertEquals(nfa.maxCopies(""), 2);  // One copy for empty string (no transitions)
+		assertEquals(nfa.maxCopies("x"), 2); // Two copies for "x" (s and a)
+		assertEquals(nfa.maxCopies("y"), 2); // One copy for "y" (no transition from "s" to "b" with "y")
+		assertEquals(nfa.maxCopies("z"), 2); // One copy for "z" (no transitions)
+		System.out.println("nfa15 maxCopies done");
+	}
+
+
+	/**
+	 * Helper method to create the NFA (nfa16).
+	 * This NFA includes:
+	 * - A start state "s" with valid transitions to intermediate state "a".
+	 * - A final state "f" that is reached from intermediate states.
+	 * - Invalid state checks for state additions and settings.
+	 */
+	private NFA nfa16() {
+		NFA nfa = new NFA();
+
+		// Add symbols 'x' and 'y' to the alphabet
+		nfa.addSigma('x');
+		nfa.addSigma('y');
+
+		// Add and set states, marking one as final
+		assertTrue(nfa.addState("s"));  // Start state
+		assertTrue(nfa.setStart("s"));
+
+		assertTrue(nfa.addState("a"));  // Intermediate state
+		assertTrue(nfa.addState("f"));  // Final state
+		assertTrue(nfa.setFinal("f"));  // Mark state 'f' as final
+
+		// Check invalid state additions and settings
+		assertFalse(nfa.addState("s"));  // Adding duplicate state
+		assertFalse(nfa.setFinal("c"));  // Setting non-existent state "c" as final
+
+		// Add valid transitions between states
+		assertTrue(nfa.addTransition("s", Set.of("a"), 'x')); // Transition from s to a on 'x'
+		assertTrue(nfa.addTransition("a", Set.of("f"), 'y')); // Transition from a to f on 'y'
+
+		// Introduce an epsilon transition from the start state to another state
+		assertTrue(nfa.addTransition("s", Set.of("f"), 'e'));  // Epsilon transition from s to f
+
+		// Test invalid transitions (from/to non-existent states, invalid symbols)
+		assertFalse(nfa.addTransition("c", Set.of("a"), 'x'));  // Non-existent state "c"
+		assertFalse(nfa.addTransition("a", Set.of("c"), 'z'));  // Invalid symbol 'z'
+
+		return nfa;  // Return the created NFA for further tests
+	}
+
+	/**
+	 * Test 16.1: Basic NFA instantiation for nfa16.
+	 * Confirms that NFA object is successfully created.
+	 */
+	@Test
+	public void test16_1() {
+		NFA nfa = nfa16();  // Instantiate nfa16
+		System.out.println("nfa16 instantiation done");
+	}
+
+	/**
+	 * Test 16.2: Verify the correctness of the states and settings in nfa16.
+	 * - Checks that the states are correctly added and named.
+	 * - Confirms that "s" is the start state, and "f" is marked as final.
+	 */
+	@Test
+	public void test16_2() {
+		NFA nfa = nfa16();
+		assertNotNull(nfa.getState("s"));  // "s" exists
+		assertTrue(nfa.isStart("s"));  // "s" is start state
+		assertTrue(nfa.isFinal("f"));  // "f" is a final state
+		assertFalse(nfa.isFinal("a"));  // "a" is not a final state
+		System.out.println("nfa16 correctness done");
+	}
+
+	/**
+	 * Test 16.3: Check if nfa16 behaves as a DFA (Deterministic Finite Automaton).
+	 * nfa16 should not be a DFA since it has transitions with a final state.
+	 */
+	@Test
+	public void test16_3() {
+		NFA nfa = nfa16();
+		assertFalse(nfa.isDFA());  // nfa16 is not a DFA
+		System.out.println("nfa16 isDFA done");
+	}
+
+	/**
+	 * Test 16.4: Test the epsilon closure for states in nfa16.
+	 * - For state "s", epsilon closure should include "s" and "f".
+	 * - For states "a" and "f", should only include themselves.
+	 */
+	@Test
+	public void test16_4() {
+		NFA nfa = nfa16();
+		assertEquals(nfa.eClosure(nfa.getState("s")), Set.of(nfa.getState("s"), nfa.getState("f")));  // Epsilon closure of "s"
+		assertEquals(nfa.eClosure(nfa.getState("a")), Set.of(nfa.getState("a")));  // Epsilon closure of "a"
+		assertEquals(nfa.eClosure(nfa.getState("f")), Set.of(nfa.getState("f")));  // Epsilon closure of "f"
+		System.out.println("nfa16 eClosure done");
+	}
+
+	/**
+	 * Test 16.5: Test whether nfa16 accepts or rejects specific strings.
+	 * - Confirms correct acceptance/rejection based on transitions and the NFA's language.
+	 */
+	@Test
+	public void test16_5() {
+		NFA nfa = nfa16();
+		assertTrue(nfa.accepts(""));       // Accepts empty string via epsilon transition to final state
+		assertFalse(nfa.accepts("x"));      // Accepts "x" (goes to a)
+		assertTrue(nfa.accepts("xy"));     // Accepts "xy" (goes to f)
+		assertFalse(nfa.accepts("y"));     // Rejects "y" (no transition from s)
+		assertFalse(nfa.accepts("z"));     // Rejects "z" (no valid transitions)
+		System.out.println("nfa16 accepts done");
+	}
+
+	/**
+	 * Test 16.6: Test the max number of NFA copies created during the execution of input strings.
+	 * Confirms the number of copies (states) the NFA generates for each input.
+	 */
+	@Test
+	public void test16_6() {
+		NFA nfa = nfa16();
+		assertEquals(nfa.maxCopies(""), 2);  // Two copies for empty string (one for s, one for f via epsilon)
+		assertEquals(nfa.maxCopies("x"), 2); // Two copies for "x" (s and a)
+		assertEquals(nfa.maxCopies("xy"), 2); // Two copies for "xy" (s, a, and f)
+		assertEquals(nfa.maxCopies("y"), 2); // One copy for "y" (no transition from s)
+		assertEquals(nfa.maxCopies("z"), 2); // One copy for "z" (no transitions)
+		System.out.println("nfa16 maxCopies done");
+	}
+
+	/**
+	 * Helper method to create the NFA (nfa17).
+	 * This NFA includes:
+	 * - A start state "s" with valid transitions to intermediate states "a" and "b".
+	 * - Multiple final states "f1" and "f2" marked as final.
+	 * - Checks for invalid state additions and settings.
+	 */
+	private NFA nfa17() {
+		NFA nfa = new NFA();
+
+		// Add symbols 'x' and 'y' to the alphabet
+		nfa.addSigma('x');
+		nfa.addSigma('y');
+
+		// Add and set states, marking multiple as final
+		assertTrue(nfa.addState("s"));  // Start state
+		assertTrue(nfa.setStart("s"));
+
+		assertTrue(nfa.addState("a"));  // Intermediate state
+		assertTrue(nfa.addState("b"));  // Another intermediate state
+		assertTrue(nfa.addState("f1"));  // Final state 1
+		assertTrue(nfa.addState("f2"));  // Final state 2
+
+		// Mark multiple states as final
+		assertTrue(nfa.setFinal("f1"));
+		assertTrue(nfa.setFinal("f2"));
+
+		// Check invalid state additions and settings
+		assertFalse(nfa.addState("s"));  // Adding duplicate state
+		assertFalse(nfa.setFinal("c"));  // Setting non-existent state "c" as final
+
+		// Add valid transitions between states
+		assertTrue(nfa.addTransition("s", Set.of("a"), 'x')); // Transition from s to a on 'x'
+		assertTrue(nfa.addTransition("s", Set.of("b"), 'y')); // Transition from s to b on 'y'
+		assertTrue(nfa.addTransition("a", Set.of("f1"), 'y')); // Transition from a to f1 on 'y'
+		assertTrue(nfa.addTransition("b", Set.of("f2"), 'x')); // Transition from b to f2 on 'x'
+
+		// Introduce epsilon transitions from the start state to final states
+		assertTrue(nfa.addTransition("s", Set.of("f1", "f2"), 'e'));  // Epsilon transition from s to f1 and f2
+		assertTrue(nfa.addTransition("a", Set.of("f2"), 'e'));  // Second epsilon transition from a to f2
+
+		// Test invalid transitions (from/to non-existent states, invalid symbols)
+		assertFalse(nfa.addTransition("c", Set.of("a"), 'x'));  // Non-existent state "c"
+		assertFalse(nfa.addTransition("a", Set.of("c"), 'z'));  // Invalid symbol 'z'
+
+		return nfa;  // Return the created NFA for further tests
+	}
+
+	/**
+	 * Test 17.1: Basic NFA instantiation for nfa17.
+	 * Confirms that NFA object is successfully created.
+	 */
+	@Test
+	public void test17_1() {
+		NFA nfa = nfa17();  // Instantiate nfa17
+		System.out.println("nfa17 instantiation done");
+	}
+
+	/**
+	 * Test 17.2: Verify the correctness of the states and settings in nfa17.
+	 * - Checks that the states are correctly added and named.
+	 * - Confirms that "s" is the start state, and "f1" and "f2" are marked as final.
+	 */
+	@Test
+	public void test17_2() {
+		NFA nfa = nfa17();
+		assertNotNull(nfa.getState("s"));  // "s" exists
+		assertTrue(nfa.isStart("s"));  // "s" is start state
+		assertTrue(nfa.isFinal("f1"));  // "f1" is a final state
+		assertTrue(nfa.isFinal("f2"));  // "f2" is also a final state
+		assertFalse(nfa.isFinal("a"));  // "a" is not a final state
+		assertFalse(nfa.isFinal("b"));  // "b" is not a final state
+		System.out.println("nfa17 correctness done");
+	}
+
+	/**
+	 * Test 17.3: Check if nfa17 behaves as a DFA (Deterministic Finite Automaton).
+	 * nfa17 should not be a DFA since it has transitions with multiple final states and epsilon transitions.
+	 */
+	@Test
+	public void test17_3() {
+		NFA nfa = nfa17();
+		assertFalse(nfa.isDFA());  // nfa17 is not a DFA
+		System.out.println("nfa17 isDFA done");
+	}
+
+	/**
+	 * Test 17.4: Test the epsilon closure for states in nfa17.
+	 * - For state "s", epsilon closure should include "s", "f1", and "f2".
+	 * - For states "a" and "b", should only include themselves and possibly "f2" due to the second epsilon.
+	 */
+	@Test
+	public void test17_4() {
+		NFA nfa = nfa17();
+		assertEquals(nfa.eClosure(nfa.getState("s")), Set.of(nfa.getState("s"), nfa.getState("f1"), nfa.getState("f2")));  // Epsilon closure of "s"
+		assertEquals(nfa.eClosure(nfa.getState("a")), Set.of(nfa.getState("a"), nfa.getState("f2")));  // Epsilon closure of "a" includes f2
+		assertEquals(nfa.eClosure(nfa.getState("b")), Set.of(nfa.getState("b")));  // Epsilon closure of "b"
+		System.out.println("nfa17 eClosure done");
+	}
+
+	/**
+	 * Test 17.5: Test whether nfa17 accepts or rejects specific strings.
+	 * - Confirms correct acceptance/rejection based on transitions and the NFA's language.
+	 */
+	@Test
+	public void test17_5() {
+		NFA nfa = nfa17();
+		assertTrue(nfa.accepts(""));        // Accepts empty string via epsilon transition to final states
+		assertTrue(nfa.accepts("x"));       // Accepts "x" (goes to b)
+		assertFalse(nfa.accepts("y"));       // Accepts "y" (goes to f1)
+		assertTrue(nfa.accepts("xy"));     // Rejects "xy" (no valid transition from s)
+		assertFalse(nfa.accepts("z"));      // Rejects "z" (no valid transitions)
+		System.out.println("nfa17 accepts done");
+	}
+
+	/**
+	 * Test 17.6: Test the max number of NFA copies created during the execution of input strings.
+	 * Confirms the number of copies (states) the NFA generates for each input.
+	 */
+	@Test
+	public void test17_6() {
+		NFA nfa = nfa17();
+		assertEquals(nfa.maxCopies(""), 3);  // Four copies for empty string (one for s, one for f1, one for f2 via epsilon)
+		assertEquals(nfa.maxCopies("x"), 3); // Two copies for "x" (s and b)
+		assertEquals(nfa.maxCopies("y"), 3); // Two copies for "y" (s and f1 via epsilon)
+		assertEquals(nfa.maxCopies("z"), 3); // One copy for "z" (no transitions)
+		System.out.println("nfa17 maxCopies done");
+	}
+
+
+	/**
+	 * Creates the NFA (nfa18) with a final state that has no outgoing edges.
+	 * - Start state transitions to final state with an epsilon transition.
+	 * - Final state has no outgoing transitions.
+	 */
+	private NFA nfa18() {
+		NFA nfa = new NFA();
+
+		// Add symbols 'x' and 'y' to the alphabet
+		nfa.addSigma('x');
+		nfa.addSigma('y');
+
+		// Add and set states, marking one as a final state with no outgoing edges
+		assertTrue(nfa.addState("s"));  // Start state
+		assertTrue(nfa.setStart("s"));
+
+		assertTrue(nfa.addState("a"));  // Intermediate state
+		assertTrue(nfa.addState("f"));  // Final state with no outgoing edges
+
+		// Mark the final state
+		assertTrue(nfa.setFinal("f"));
+
+		// Check invalid state additions and settings
+		assertFalse(nfa.addState("s"));  // Adding duplicate state
+		assertFalse(nfa.setFinal("c"));  // Setting non-existent state "c" as final
+
+		// Add valid transitions between states
+		assertTrue(nfa.addTransition("s", Set.of("a"), 'x')); // Transition from s to a on 'x'
+		assertTrue(nfa.addTransition("a", Set.of("f"), 'y')); // Transition from a to f on 'y'
+
+		// Introduce an epsilon transition from the start state to the final state
+		assertTrue(nfa.addTransition("s", Set.of("f"), 'e'));  // Epsilon transition from s to f
+
+		// Test invalid transitions (from/to non-existent states, invalid symbols)
+		assertFalse(nfa.addTransition("c", Set.of("a"), 'x'));  // Non-existent state "c"
+		assertFalse(nfa.addTransition("a", Set.of("c"), 'z'));  // Invalid symbol 'z'
+
+		return nfa;  // Return the created NFA for further tests
+	}
+
+	/**
+	 * Test 18.1: Basic NFA instantiation for nfa18.
+	 * Confirms that NFA object is successfully created.
+	 */
+	@Test
+	public void test18_1() {
+		NFA nfa = nfa18();  // Instantiate nfa18
+		System.out.println("nfa18 instantiation done");
+	}
+
+	/**
+	 * Test 18.2: Verify the correctness of the states and settings in nfa18.
+	 * - Checks that the states are correctly added and named.
+	 * - Confirms that "s" is the start state, and "f" is marked as final.
+	 */
+	@Test
+	public void test18_2() {
+		NFA nfa = nfa18();
+		assertNotNull(nfa.getState("s"));  // "s" exists
+		assertTrue(nfa.isStart("s"));  // "s" is start state
+		assertTrue(nfa.isFinal("f"));  // "f" is a final state
+		assertFalse(nfa.isFinal("a"));  // "a" is not a final state
+		System.out.println("nfa18 correctness done");
+	}
+
+	/**
+	 * Test 18.3: Check if nfa18 behaves as a DFA (Deterministic Finite Automaton).
+	 * nfa18 should not be a DFA since it has a final state with no outgoing edges.
+	 */
+	@Test
+	public void test18_3() {
+		NFA nfa = nfa18();
+		assertFalse(nfa.isDFA());  // nfa18 is not a DFA
+		System.out.println("nfa18 isDFA done");
+	}
+
+	/**
+	 * Test 18.4: Test the epsilon closure for states in nfa18.
+	 * - For state "s", epsilon closure should include "s" and "f".
+	 * - For states "a" and "f", should only include themselves.
+	 */
+	@Test
+	public void test18_4() {
+		NFA nfa = nfa18();
+		assertEquals(nfa.eClosure(nfa.getState("s")), Set.of(nfa.getState("s"), nfa.getState("f")));  // Epsilon closure of "s"
+		assertEquals(nfa.eClosure(nfa.getState("a")), Set.of(nfa.getState("a")));  // Epsilon closure of "a"
+		assertEquals(nfa.eClosure(nfa.getState("f")), Set.of(nfa.getState("f")));  // Epsilon closure of "f"
+		System.out.println("nfa18 eClosure done");
+	}
+
+	/**
+	 * Test 18.5: Test whether nfa18 accepts or rejects specific strings.
+	 * - Confirms correct acceptance/rejection based on transitions and the NFA's language.
+	 */
+	@Test
+	public void test18_5() {
+		NFA nfa = nfa18();
+		assertTrue(nfa.accepts(""));  // Accepts empty string via epsilon transition to final state "f"
+		assertFalse(nfa.accepts("x"));  // Accepts "x" (goes to a, then to f)
+		assertFalse(nfa.accepts("y"));  // Accepts "y" (goes to f via a)
+		assertTrue(nfa.accepts("xy")); // Rejects "xy" (no valid transitions)
+		assertFalse(nfa.accepts("z"));  // Rejects "z" (no valid transitions)
+		System.out.println("nfa18 accepts done");
+	}
+
+	/**
+	 * Test 18.6: Test the max number of NFA copies created during the execution of input strings.
+	 * Confirms the number of copies (states) the NFA generates for each input.
+	 */
+	@Test
+	public void test18_6() {
+		NFA nfa = nfa18();
+		assertEquals(nfa.maxCopies(""), 2);  // Two copies for empty string (s and f via epsilon)
+		assertEquals(nfa.maxCopies("x"), 2); // Two copies for "x" (s and a)
+		assertEquals(nfa.maxCopies("y"), 2); // Two copies for "y" (s and f via epsilon)
+		assertEquals(nfa.maxCopies("z"), 2); // One copy for "z" (no transitions)
+		System.out.println("nfa18 maxCopies done");
+	}
+
+
+
 }
